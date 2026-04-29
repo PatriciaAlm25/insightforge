@@ -1,0 +1,7 @@
+date,cost,delay,billing_health
+2026-04-01,1500,0,Safe
+2026-04-05,2000,1,Warning
+2026-04-10,1800,0,Safe
+2026-04-15,3500,3,High Risk
+2026-04-20,4000,5,High Risk
+2026-04-25,2100,1,Warning
