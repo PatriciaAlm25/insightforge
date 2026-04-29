@@ -1,0 +1,9 @@
+employee,task,status,progress_percent,deadline,hours_spent,hours_estimated
+Alice Chen,Design Homepage UI,In Progress,75,2026-05-10,18,24
+Bob Smith,Backend API Development,Delayed,40,2026-05-08,22,40
+Carol Davis,Database Schema Setup,Completed,100,2026-05-01,10,12
+David Kim,Authentication Module,In Progress,60,2026-05-12,15,25
+Alice Chen,Mobile Responsiveness,Not Started,0,2026-05-15,0,16
+Bob Smith,Payment Integration,In Progress,25,2026-05-20,8,30
+Carol Davis,Testing & QA,Not Started,0,2026-05-22,0,20
+David Kim,Deployment Setup,Not Started,0,2026-05-25,0,8
