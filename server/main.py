@@ -68,16 +68,16 @@ You are InsightForge AI. A user is updating their project data with file "{f.fil
 Columns: {cols}
 Latest Rows: {json.dumps(rows[:15])}
 
-Analyze this update and respond with ONLY valid JSON:
+Respond with ONLY valid JSON:
 {{
   "data_type": "label",
-  "summary": "overall status update as of today",
+  "summary": "overall status update",
   "key_metrics": {{"metric": "value"}},
   "risks": ["risk 1"],
-  "observation": "What changed or stands out in this update?",
+  "observation": "critical observation",
   "recommendations": ["action"],
   "employees": [
-     {{"name": "full name", "tasks": number, "completed": number, "score": 0-100}}
+     {{"name": "name", "tasks": number, "completed": number, "score": 0-100}}
   ]
 }}
 """
@@ -85,7 +85,33 @@ Analyze this update and respond with ONLY valid JSON:
             ai_raw = ai_call(analysis_prompt, json_mode=True)
             ai_analysis = json.loads(ai_raw)
         except Exception as e:
-            ai_analysis = {"data_type": "Update", "summary": str(e), "risks": [], "observation": "", "recommendations": [], "employees": []}
+            # FALLBACK: Basic extraction if AI fails (e.g. API 401)
+            print(f"AI Analysis Failed: {str(e)}. Using basic extraction fallback.")
+            
+            # Simple heuristic for employee detection
+            detected_employees = []
+            emp_col = next((c for c in df.columns if any(k in c.lower() for k in ["employee", "name", "assignee", "member"])), None)
+            if emp_col:
+                for name in df[emp_col].unique():
+                    emp_rows = df[df[emp_col] == name]
+                    prog_col = next((c for c in df.columns if "progress" in c.lower() or "percent" in c.lower()), None)
+                    progress = emp_rows[prog_col].mean() if prog_col and not emp_rows[prog_col].empty else 50.0
+                    detected_employees.append({
+                        "name": str(name),
+                        "tasks": len(emp_rows),
+                        "completed": 0, # Manual fallback simplified
+                        "score": float(progress)
+                    })
+
+            ai_analysis = {
+                "data_type": "Manual Data Update",
+                "summary": f"AI service currently unavailable. Displaying raw metrics.",
+                "key_metrics": {"Total Rows": len(df)},
+                "risks": ["AI analysis service offline"],
+                "observation": "Extracted metrics via fallback logic.",
+                "recommendations": ["Update OpenRouter API Key in .env"],
+                "employees": detected_employees
+            }
 
         # 2. Store in Project_Data (We overwrite the entry for the same filename to keep the 'Current State' clean and avoid clutter)
         if SUPA_URL and SUPA_KEY:
@@ -116,9 +142,7 @@ Analyze this update and respond with ONLY valid JSON:
                     })
                 supa_post("Employee_Performance", perf_records)
 
-        # 4. Save Insights & Explicit Anomalies
-        if SUPA_URL and SUPA_KEY:
-            # Save Insights
+            # 4. Save Insights
             insight = {
                 "project_id": projectId,
                 "observation": ai_analysis.get("observation", ""),
@@ -126,18 +150,6 @@ Analyze this update and respond with ONLY valid JSON:
                 "recommendations": ai_analysis.get("recommendations", [])
             }
             supa_post("Project_Insights", [insight])
-
-            # Save Anomalies found by AI
-            if ai_analysis.get("risks"):
-                anomaly_records = []
-                for risk in ai_analysis["risks"]:
-                    anomaly_records.append({
-                        "project_id": projectId,
-                        "type": "AI Flagged Risk",
-                        "severity": "🔴 High",
-                        "description": risk
-                    })
-                supa_post("Anomalies", anomaly_records)
         
         results.append({"file": f.filename, "status": "Synced & Updated", "analysis": ai_analysis})
 
