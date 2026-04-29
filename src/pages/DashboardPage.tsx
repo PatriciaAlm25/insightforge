@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Clock, AlertTriangle, CheckCircle2, ArrowLeft, FileSpreadsheet, Loader2, Zap, ShieldAlert } from 'lucide-react';
+import { BarChart3, TrendingUp, Clock, CheckCircle2, ArrowLeft, Loader2, Zap, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { DataIngestion } from '../components/DataIngestion';
 import { ProjectContextForm } from '../components/ProjectContextForm';
