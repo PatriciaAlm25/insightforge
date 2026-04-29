@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Clock, CheckCircle2, ArrowLeft, Loader2, Zap, ShieldAlert } from 'lucide-react';
+import { BarChart3, TrendingUp, Clock, AlertTriangle, CheckCircle2, ArrowLeft, FileSpreadsheet, Loader2, Zap, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { DataIngestion } from '../components/DataIngestion';
 import { ProjectContextForm } from '../components/ProjectContextForm';
@@ -16,15 +16,8 @@ const DashboardPage: React.FC = () => {
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [aiInsight, setAiInsight] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [anomalies, setAnomalies] = useState<any[]>([]);
 
-  useEffect(() => { fetchMetrics(); fetchAnomalies(); }, [projectId, refreshKey]);
-
-  const fetchAnomalies = async () => {
-    if (!projectId) return;
-    const { data } = await supabase.from('Anomalies').select('*').eq('project_id', projectId).order('created_at', { ascending: false });
-    setAnomalies(data || []);
-  };
+  useEffect(() => { fetchMetrics(); }, [projectId, refreshKey]);
 
   const fetchMetrics = async () => {
     if (!projectId) return;
@@ -57,6 +50,8 @@ const DashboardPage: React.FC = () => {
   const totalDelay = metrics.reduce((sum, r) => sum + (parseInt(getVal(r, ['delay', 'delay_days', 'days_late', 'lateness'])) || 0), 0);
   const latestHealth = metrics.length > 0 ? getVal(metrics[0], ['billing_health', 'health', 'status', 'condition']) : 'N/A';
   
+  const anomalies = metrics.filter(r => (parseFloat(getVal(r, ['cost', 'cost_spent'])) > 100000) || (parseInt(getVal(r, ['delay', 'delay_days'])) > 10));
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-32">
       <nav className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-40">

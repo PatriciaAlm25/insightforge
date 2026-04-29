@@ -29,7 +29,7 @@ const RegisterPage: React.FC = () => {
     setError('');
 
     try {
-      const { error: dbError } = await supabase
+      const { data, error: dbError } = await supabase
         .from('Projects')
         .insert([
           {

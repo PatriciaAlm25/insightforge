@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ShieldAlert, Zap, Layers, BarChart, FileText } from 'lucide-react';
+import { Activity, ShieldAlert, Zap, Layers, BarChart, FileText, ChevronRight } from 'lucide-react';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
