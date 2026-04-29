@@ -1,0 +1,11 @@
+date,employee_name,task_name,status,progress_percent,cost_spent,delay_days,billing_health
+2026-06-01,Alice Chen,Project Initiation,Completed,100,5000,0,Safe
+2026-06-05,Bob Smith,System Architecture,Completed,100,8000,0,Safe
+2026-06-10,Carol Davis,Database Setup,Completed,100,4000,0,Safe
+2026-06-15,Alice Chen,Frontend UI Design,In Progress,80,12000,0,Safe
+2026-06-20,Bob Smith,Backend API Dev,Delayed,40,25000,3,Warning
+2026-06-25,David Kim,Auth Integration,In Progress,60,15000,0,Safe
+2026-07-01,Alice Chen,Testing & QA,Not Started,0,45000,5,High Risk
+2026-07-05,Bob Smith,Security Audit,In Progress,10,75000,8,High Risk
+2026-07-10,Carol Davis,Documentation,In Progress,50,5000,0,Safe
+2026-07-15,David Kim,Deployment,Not Started,0,120000,12,High Risk
