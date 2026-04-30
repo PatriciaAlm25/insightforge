@@ -108,8 +108,9 @@ Respond with ONLY valid JSON:
                 "employees": detected_employees
             }
 
-        # 2. Store in Project_Data (We overwrite the entry for the same filename to keep the 'Current State' clean and avoid clutter)
+        # 2. Store in Project_Data
         if SUPA_URL and SUPA_KEY:
+            # Overwrite the entry for the same filename to keep 'Current State' clean
             requests.delete(f"{SUPA_URL}/rest/v1/Project_Data?project_id=eq.{projectId}&file_name=eq.{f.filename}", headers=HDR)
             
             record = {
@@ -122,22 +123,42 @@ Respond with ONLY valid JSON:
             }
             supa_post("Project_Data", [record])
 
-            # 3. Automatic Employee Performance Updates
-            if ai_analysis.get("employees"):
-                # We clear and update the dedicated table for this project
+            # 3. AGGREGATE Performance from ALL project files
+            # This ensures that even if one file is missing employees, the data from other files persists.
+            all_project_data = supa_get("Project_Data", f"project_id=eq.{projectId}")
+            
+            aggregated_employees = {}
+            for entry in all_project_data:
+                file_analysis = entry.get("ai_analysis", {})
+                file_employees = file_analysis.get("employees", [])
+                
+                for emp in file_employees:
+                    name = emp.get("name")
+                    if not name: continue
+                    
+                    if name not in aggregated_employees:
+                        aggregated_employees[name] = {"tasks": 0, "completed": 0, "scores": []}
+                    
+                    aggregated_employees[name]["tasks"] += emp.get("tasks", 0)
+                    aggregated_employees[name]["completed"] += emp.get("completed", 0)
+                    aggregated_employees[name]["scores"].append(emp.get("score", 0.0))
+
+            if aggregated_employees:
+                # Clear and update with the full aggregated state
                 requests.delete(f"{SUPA_URL}/rest/v1/Employee_Performance?project_id=eq.{projectId}", headers=HDR)
                 perf_records = []
-                for emp in ai_analysis["employees"]:
+                for name, stats in aggregated_employees.items():
+                    avg_score = sum(stats["scores"]) / len(stats["scores"]) if stats["scores"] else 0.0
                     perf_records.append({
                         "project_id": projectId,
-                        "employee_name": emp.get("name"),
-                        "tasks_assigned": emp.get("tasks", 0),
-                        "tasks_completed": emp.get("completed", 0),
-                        "efficiency_score": emp.get("score", 0.0)
+                        "employee_name": name,
+                        "tasks_assigned": stats["tasks"],
+                        "tasks_completed": stats["completed"],
+                        "efficiency_score": float(avg_score)
                     })
                 supa_post("Employee_Performance", perf_records)
 
-            # 4. Save Insights
+            # 4. Save Latest Insights
             insight = {
                 "project_id": projectId,
                 "observation": ai_analysis.get("observation", ""),
