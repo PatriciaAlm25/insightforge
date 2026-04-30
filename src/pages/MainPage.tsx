@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FolderKanban, Lock, X, Activity, ArrowRight, ShieldAlert, Zap } from 'lucide-react';
+import { FolderKanban, Lock, X, Activity, ArrowRight, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const MainPage: React.FC = () => {
