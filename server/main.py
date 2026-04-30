@@ -17,7 +17,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 SUPA_URL = os.environ.get("VITE_SUPABASE_URL", "https://eunnztvbitlaflrpyjqo.supabase.co")
 SUPA_KEY = os.environ.get("VITE_SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1bm56dHZiaXRsYWZscnB5anFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NTkyODMsImV4cCI6MjA5MzAzNTI4M30.XBTylmeX5Qva1WDpMiifLgdrAL3q9IyQOIVz0btbwIo")
-OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
+OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
 
 HDR = {"apikey": SUPA_KEY, "Authorization": f"Bearer {SUPA_KEY}", "Content-Type": "application/json", "Prefer": "return=minimal"}
 HDR_READ = {"apikey": SUPA_KEY, "Authorization": f"Bearer {SUPA_KEY}"}
@@ -64,31 +64,31 @@ async def upload_csv(files: List[UploadFile] = File(...), projectId: str = Form(
 
         # 1. AI Deep Analysis for Update Reconcillation
         analysis_prompt = f"""
-You are InsightForge AI. A user is updating their project data with file "{f.filename}".
+You are InsightForge AI. Analyze this project update for file "{f.filename}".
 Columns: {cols}
 Latest Rows: {json.dumps(rows[:15])}
 
 Respond with ONLY valid JSON:
 {{
-  "data_type": "label",
-  "summary": "overall status update",
+  "data_type": "Progress Update / Task Log / Financials",
+  "summary": "overall synthesis of current progress",
   "key_metrics": {{"metric": "value"}},
   "risks": ["risk 1"],
-  "observation": "critical observation",
+  "observation": "What stands out?",
   "recommendations": ["action"],
   "employees": [
-     {{"name": "name", "tasks": number, "completed": number, "score": 0-100}}
+     {{"name": "employee name", "tasks": number, "completed": number, "score": 0-100}}
   ]
 }}
 """
         try:
+            print(f"DEBUG: Triggering AI Analysis for {f.filename}...")
             ai_raw = ai_call(analysis_prompt, json_mode=True)
             ai_analysis = json.loads(ai_raw)
+            print(f"DEBUG: AI Analysis Successful.")
         except Exception as e:
-            # FALLBACK: Basic extraction if AI fails (e.g. API 401)
-            print(f"AI Analysis Failed: {str(e)}. Using basic extraction fallback.")
-            
-            # Simple heuristic for employee detection
+            print(f"ERROR: AI Analysis Failed: {str(e)}. Using fallback extraction.")
+            # Fallback for basic data visualization if AI is down
             detected_employees = []
             emp_col = next((c for c in df.columns if any(k in c.lower() for k in ["employee", "name", "assignee", "member"])), None)
             if emp_col:
@@ -96,20 +96,15 @@ Respond with ONLY valid JSON:
                     emp_rows = df[df[emp_col] == name]
                     prog_col = next((c for c in df.columns if "progress" in c.lower() or "percent" in c.lower()), None)
                     progress = emp_rows[prog_col].mean() if prog_col and not emp_rows[prog_col].empty else 50.0
-                    detected_employees.append({
-                        "name": str(name),
-                        "tasks": len(emp_rows),
-                        "completed": 0, # Manual fallback simplified
-                        "score": float(progress)
-                    })
+                    detected_employees.append({"name": str(name), "tasks": len(emp_rows), "completed": 0, "score": float(progress)})
 
             ai_analysis = {
                 "data_type": "Manual Data Update",
-                "summary": f"AI service currently unavailable. Displaying raw metrics.",
-                "key_metrics": {"Total Rows": len(df)},
+                "summary": "AI Synthesis temporarily unavailable. Displaying raw project metrics.",
+                "key_metrics": {"Status": "Operational"},
                 "risks": ["AI analysis service offline"],
-                "observation": "Extracted metrics via fallback logic.",
-                "recommendations": ["Update OpenRouter API Key in .env"],
+                "observation": "Extracted metrics via system fallback.",
+                "recommendations": ["Verify OpenRouter API Key configuration"],
                 "employees": detected_employees
             }
 
